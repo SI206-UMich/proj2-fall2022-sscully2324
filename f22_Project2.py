@@ -42,7 +42,7 @@ def get_listing_information(listing_id):
 
     #get the policy number
     policy_number = soup.find('li', class_ = 'f19phm7j dir dir-ltr')
-    policy_number = re.findall(r'STR-\d+|2022-\d+STR|Pending|pending|Exempt', policy_number.text)
+    policy_number = re.findall(r'(?:STR)?(?:\d+)?-?\d+(?:STR)?|Pending|pending|Exempt', policy_number.text)
     if policy_number == []:
         policy_number = 'Exempt'
     elif 'pending' in policy_number or 'Pending' in policy_number:
@@ -61,7 +61,7 @@ def get_listing_information(listing_id):
 
     #get the number of bedrooms
     num_bedrooms = soup.find('span', string = re.compile(r'[S|s]tudio|[B|b]edroom'))
-    num_bedrooms = re.findall(r'\d+', num_bedrooms.text)
+    num_bedrooms = re.findall(r'\d+\s', num_bedrooms.text)
     if num_bedrooms == []:
         num_bedrooms = 1
     else:
@@ -85,50 +85,22 @@ def get_detailed_listing_database(html_file):
 
 
 def write_csv(data, filename):
-    """
-    Write a function that takes in a list of tuples (called data, i.e. the
-    one that is returned by get_detailed_listing_database()), sorts the tuples in
-    ascending order by cost, writes the data to a csv file, and saves it
-    to the passed filename. The first row of the csv should contain
-    "Listing Title", "Cost", "Listing ID", "Policy Number", "Place Type", "Number of Bedrooms",
-    respectively as column headers. For each tuple in data, write a new
-    row to the csv, placing each element of the tuple in the correct column.
 
-    When you are done your CSV file should look like this:
+#write it in ascending order of cost
+    data.sort(key = lambda x: x[1])
+    write = csv.writer(open(filename, 'w'))
+    write.writerow(['Listing Title', 'Cost', 'Listing ID', 'Policy Number', 'Place Type', 'Number of Bedrooms'])
+    for row in data:
+        write.writerow(row)
 
-    Listing Title,Cost,Listing ID,Policy Number,Place Type,Number of Bedrooms
-    title1,cost1,id1,policy_number1,place_type1,num_bedrooms1
-    title2,cost2,id2,policy_number2,place_type2,num_bedrooms2
-    title3,cost3,id3,policy_number3,place_type3,num_bedrooms3
-    ...
-
-    In order of least cost to most cost.
-
-    This function should not return anything.
-    """
-    pass
+    
 
 
 def check_policy_numbers(data):
-    """
-    Write a function that takes in a list of tuples called data, (i.e. the one that is returned by
-    get_detailed_listing_database()), and parses through the policy number of each, validating the
-    policy number matches the policy number format. Ignore any pending or exempt listings.
-    Return the listing numbers with respective policy numbers that do not match the correct format.
-        Policy numbers are a reference to the business license San Francisco requires to operate a
-        short-term rental. These come in two forms, where # is a number from [0-9]:
-            20##-00####STR
-            STR-000####
-    .
-    Return value should look like this:
-    [
-        listing id 1,
-        listing id 2,
-        ...
-    ]
 
-    """
     pass
+
+
 
 
 def extra_credit(listing_id):
@@ -233,12 +205,14 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
+        self.assertEqual(csv_lines[0], ['Listing Title', 'Cost', 'Listing ID', 'Policy Number', 'Place Type', 'Number of Bedrooms'])
 
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
+        self.assertEqual(csv_lines[1], ['Private room in Mission District', '82', '51027324', 'Pending', 'Private Room', '1'])
 
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
+        self.assertEqual(csv_lines[-1], ['Apartment in Mission District', '399', '28668414', 'Pending', 'Entire Room', '2'])
 
-        pass
 
     def test_check_policy_numbers(self):
         # call get_detailed_listing_database on "html_files/mission_district_search_results.html"
@@ -249,11 +223,13 @@ class TestCases(unittest.TestCase):
         # check that the return value is a list
         self.assertEqual(type(invalid_listings), list)
         # check that there is exactly one element in the string
+        self.assertEqual(len(invalid_listings), 1)
 
         # check that the element in the list is a string
+        self.assertEqual(type(invalid_listings[0]), str)
 
         # check that the first element in the list is '16204265'
-        pass
+        self.assertEqual(invalid_listings[0], '16204265')
 
 
 if __name__ == '__main__':
