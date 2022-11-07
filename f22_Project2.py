@@ -84,9 +84,6 @@ def get_detailed_listing_database(html_file):
 
 
 
-
-
-
 def write_csv(data, filename):
     """
     Write a function that takes in a list of tuples (called data, i.e. the
