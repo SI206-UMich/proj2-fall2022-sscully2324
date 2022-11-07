@@ -7,25 +7,19 @@ import unittest
 
 
 def get_listings_from_search_results(html_file):
-    """
-    Write a function that creates a BeautifulSoup object on html_file. Parse
-    through the object and return a list of tuples containing:
-     a string of the title of the listing,
-     an int of the cost to rent for one night,
-     and a string of the listing id number
-    in the format given below. Make sure to turn costs into ints.
 
-    The listing id is found in the url of a listing. For example, for
-        https://www.airbnb.com/rooms/1944564
-    the listing id is 1944564.
-.
 
-    [
-        ('Title of Listing 1', 'Cost 1', 'Listing ID 1'),  # format
-        ('Loft in Mission District', 210, '1944564'),  # example
-    ]
-    """
-    pass
+    tuple_listing = []
+    with open(html_file, 'r') as f:
+        soup = BeautifulSoup(f, 'html.parser')
+        listings = soup.find_all('div', class_ = 'c1l1h97y')
+        for listing in listings:
+            title = listing.find('div', class_ = 'c1l1h97y')
+            cost = listing.find('div', class_ = 'c1l1h97y')
+            listing_id = listing.find('div', class_ = 'c1l1h97y')
+            tuple_listing.append((title, cost, listing_id))
+    return tuple_listing
+
 
 
 def get_listing_information(listing_id):
@@ -191,14 +185,15 @@ class TestCases(unittest.TestCase):
             # assert each item in the list of listings is a tuple
             self.assertEqual(type(item), tuple)
             # check that each tuple has a length of 6
+            self.assertEqual(len(item), 6)
 
         # check that the first tuple is made up of the following:
         # 'Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1
+        self.assertEqual(detailed_database[0], ('Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1))
 
         # check that the last tuple is made up of the following:
         # 'Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1
-
-        pass
+        self.assertEqual(detailed_database[-1], ('Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1))
 
     def test_write_csv(self):
         # call get_detailed_listing_database on "html_files/mission_district_search_results.html"
