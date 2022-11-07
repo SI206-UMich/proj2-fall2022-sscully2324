@@ -8,17 +8,28 @@ import unittest
 
 def get_listings_from_search_results(html_file):
 
-
-    tuple_listing = []
-    with open(html_file, 'r') as f:
-        soup = BeautifulSoup(f, 'html.parser')
-        listings = soup.find_all('div', class_ = 'c1l1h97y')
-        for listing in listings:
-            title = listing.find('div', class_ = 'c1l1h97y')
-            cost = listing.find('div', class_ = 'c1l1h97y')
-            listing_id = listing.find('div', class_ = 'c1l1h97y')
-            tuple_listing.append((title, cost, listing_id))
-    return tuple_listing
+    #open the file
+    f = open(html_file, 'r')
+    #read the file
+    html = f.read()
+    #close the file
+    f.close()
+    #parse the file
+    soup = BeautifulSoup(html, 'html.parser')
+    #find the listing title
+    listing_title = soup.find_all('div', class_ = 't1jojoys dir dir-ltr')
+    #find the cost
+    cost = soup.find_all('span', class_ = '_tyxjp1')
+    #find the digits after /rooms/ in the listing id only 
+    listing_id = soup.find_all('a', class_ = 'ln2bl2p dir dir-ltr')
+    #get the digits after /rooms/ in the listing id only, with no brackets
+    for i in range(len(listing_id)):
+        listing_id[i] = re.findall(r'\d+', listing_id[i]['href'])
+    #get the listing title, cost, and listing id in a list of tuples
+    listing_info = []
+    for i in range(len(listing_title)):
+        listing_info.append((listing_title[i].text, cost[i].text, listing_id[i][0]))
+    return listing_info
 
 
 
@@ -46,7 +57,11 @@ def get_listing_information(listing_id):
         number of bedrooms
     )
     """
+    #answer
     pass
+
+
+    
 
 
 def get_detailed_listing_database(html_file):
@@ -141,11 +156,14 @@ class TestCases(unittest.TestCase):
         # check that the variable you saved after calling the function is a list
         self.assertEqual(type(listings), list)
         # check that each item in the list is a tuple
+        for item in listings:
+            self.assertEqual(type(item), tuple)
 
         # check that the first title, cost, and listing id tuple is correct (open the search results html and find it)
+        self.assertEqual(listings[0], ('Loft in Mission District', '$210', '1944564'))
 
         # check that the last title is correct (open the search results html and find it)
-        pass
+        self.assertEqual(listings[-1], ('Guest suite in Mission District', '$238', '32871760'))
 
     def test_get_listing_information(self):
         html_list = ["1623609",
