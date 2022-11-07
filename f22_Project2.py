@@ -28,57 +28,63 @@ def get_listings_from_search_results(html_file):
     #get the listing title, cost, and listing id in a list of tuples
     listing_info = []
     for i in range(len(listing_title)):
-        listing_info.append((listing_title[i].text, cost[i].text, listing_id[i][0]))
+        listing_info.append((listing_title[i].text, int(cost[i].text.strip('$')), listing_id[i][0]))
     return listing_info
 
 
 
 def get_listing_information(listing_id):
-    """
-    Write a function to return relevant information in a tuple from an Airbnb listing id.
-    NOTE: Use the static files in the html_files folder, do NOT send requests to the actual website.
-    Information we're interested in:
-        string - Policy number: either a string of the policy number, "Pending", or "Exempt"
-            This field can be found in the section about the host.
-            Note that this is a text field the lister enters, this could be a policy number, or the word
-            "pending" or "exempt" or many others. Look at the raw data, decide how to categorize them into
-            the three categories.
-        string - Place type: either "Entire Room", "Private Room", or "Shared Room"
-            Note that this data field is not explicitly given from this page. Use the
-            following to categorize the data into these three fields.
-                "Private Room": the listing subtitle has the word "private" in it
-                "Shared Room": the listing subtitle has the word "shared" in it
-                "Entire Room": the listing subtitle has neither the word "private" nor "shared" in it
-        int - Number of bedrooms
-.
-    (
-        policy number,
-        place type,
-        number of bedrooms
-    )
-    """
-    #answer
-    pass
+
+    f = open('html_files/' + "listing_" + listing_id + '.html', 'r')
+    html = f.read()
+    f.close()
+    soup = BeautifulSoup(html, 'html.parser')
+
+    #get the policy number
+    policy_number = soup.find('li', class_ = 'f19phm7j dir dir-ltr')
+    policy_number = re.findall(r'STR-\d+|2022-\d+STR|Pending|pending|Exempt', policy_number.text)
+    if policy_number == []:
+        policy_number = 'Exempt'
+    elif 'pending' in policy_number or 'Pending' in policy_number:
+        policy_number = 'Pending'
+    else:
+        policy_number = policy_number[0]
+
+    #get the place type
+    place_type = soup.find('h2', class_ = '_14i3z6h')
+    place_type = re.findall(r'Private room|Shared room', place_type.text)
+    if place_type == []:
+        place_type = 'Entire Room'
+    else:
+        
+        place_type = place_type[0].title()
+
+    #get the number of bedrooms
+    num_bedrooms = soup.find('span', string = re.compile(r'[S|s]tudio|[B|b]edroom'))
+    num_bedrooms = re.findall(r'\d+', num_bedrooms.text)
+    if num_bedrooms == []:
+        num_bedrooms = 1
+    else:
+        num_bedrooms = int(num_bedrooms[0])
 
 
-    
+    listing_info = (policy_number, place_type, num_bedrooms)
+    return listing_info
 
 
+   
 def get_detailed_listing_database(html_file):
-    """
-    Write a function that calls the above two functions in order to return
-    the complete listing information using the functions you’ve created.
-    This function takes in a variable representing the location of the search results html file.
-    The return value should be in this format:
+
+    listings = get_listings_from_search_results(html_file)
+    detailed_listings = []
+    for listing in listings:
+        detailed_listing = (listing[0], listing[1], listing[2]) + get_listing_information(listing[2])
+        detailed_listings.append(detailed_listing)
+    return detailed_listings
 
 
-    [
-        (Listing Title 1,Cost 1,Listing ID 1,Policy Number 1,Place Type 1,Number of Bedrooms 1),
-        (Listing Title 2,Cost 2,Listing ID 2,Policy Number 2,Place Type 2,Number of Bedrooms 2),
-        ...
-    ]
-    """
-    pass
+
+
 
 
 def write_csv(data, filename):
@@ -160,10 +166,10 @@ class TestCases(unittest.TestCase):
             self.assertEqual(type(item), tuple)
 
         # check that the first title, cost, and listing id tuple is correct (open the search results html and find it)
-        self.assertEqual(listings[0], ('Loft in Mission District', '$210', '1944564'))
+        self.assertEqual(listings[0], ('Loft in Mission District', 210, '1944564'))
 
         # check that the last title is correct (open the search results html and find it)
-        self.assertEqual(listings[-1], ('Guest suite in Mission District', '$238', '32871760'))
+        self.assertEqual(listings[-1], ('Guest suite in Mission District', 238, '32871760'))
 
     def test_get_listing_information(self):
         html_list = ["1623609",
@@ -186,12 +192,14 @@ class TestCases(unittest.TestCase):
             # check that the third element in the tuple is an int
             self.assertEqual(type(listing_information[2]), int)
         # check that the first listing in the html_list has policy number 'STR-0001541'
+        self.assertEqual(listing_informations[0][0], 'STR-0001541')
 
         # check that the last listing in the html_list is a "Private Room"
+        self.assertEqual(listing_informations[-1][1], 'Private Room')
 
         # check that the third listing has one bedroom
+        self.assertEqual(listing_informations[2][2], 1)
 
-        pass
 
     def test_get_detailed_listing_database(self):
         # call get_detailed_listing_database on "html_files/mission_district_search_results.html"
