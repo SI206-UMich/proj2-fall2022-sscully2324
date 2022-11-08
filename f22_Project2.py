@@ -30,7 +30,7 @@ def get_listing_information(listing_id):
     f.close()
     soup = BeautifulSoup(html, 'html.parser')
     policy_number = soup.find('li', class_ = 'f19phm7j dir dir-ltr')
-    policy_number = re.findall(r'(?:STR)?(?:\d+)?-?\d+(?:STR)?|Pending|pending|Exempt', policy_number.text)
+    policy_number = re.findall(r'(?:STR)?(?:\d+)?-?\d+(?:STR)?|Pending|pending|Exempt|exempt', policy_number.text)
     if policy_number == []:
         policy_number = 'Exempt'
     elif 'pending' in policy_number or 'Pending' in policy_number:
@@ -54,7 +54,6 @@ def get_listing_information(listing_id):
     return listing_info
 
 
-   
 def get_detailed_listing_database(html_file):
 
     listings = get_listings_from_search_results(html_file)
