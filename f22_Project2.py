@@ -1,6 +1,8 @@
-#Name: Sean Scully
-#UMID: 51027244
-#People I worked with: Annabelle Phillips, Brooke Rossow
+# Name: Sean Scully
+# Date: 11/09/2022
+# Si206: Project 2
+# UMID: 51027244
+# People I worked with: Annabelle Phillips, Brooke Rossow
 
 
 from xml.sax import parseString
